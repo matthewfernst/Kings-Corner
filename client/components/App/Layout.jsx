@@ -22,7 +22,7 @@ import SendIcon from "@mui/icons-material/Send";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import clsx from "clsx";
 
-import moment from "moment";
+import { DateTime } from "luxon";
 
 import { useQuery, useMutation } from "@apollo/client";
 import { GetMessages } from "../../graphql/query.js";
@@ -201,7 +201,7 @@ const Messages = (props) => {
 			message.from.username === props.activeMessageUser
 	);
 	const sortedByDate = messagesWithUser.sort(
-		(a, b) => new Date(a.message.date) > new Date(b.message.date)
+		(a, b) => DateTime.fromMillis(a.message.date) > DateTime.fromMillis(b.message.date)
 	);
 
 	return (
@@ -248,7 +248,9 @@ const Messages = (props) => {
 												textAlign: "right"
 											}}
 										>
-											{moment(message.date).format("MMMM Do, h:mm a")}
+											{DateTime.fromMillis(message.date).toFormat(
+												"MMMM Do, h:mm a"
+											)}
 										</Typography>
 									</Box>
 								</Box>

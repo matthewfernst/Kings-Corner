@@ -2,7 +2,7 @@ import chai from "chai";
 
 chai.should();
 
-import mocks, { getRandomFenString, getRandomMatchType } from "../../server/mocking.js";
+import mocks, { getRandomFenString } from "../../server/mocking.js";
 
 describe("mocking.js", () => {
 	describe("getRandomFenString", () => {
@@ -11,14 +11,6 @@ describe("mocking.js", () => {
 		});
 		it("should return a string", () => {
 			getRandomFenString(1).should.be.a("string");
-		});
-	});
-	describe("getRandomMatchType", () => {
-		it("should be a function", () => {
-			getRandomMatchType.should.be.a("function");
-		});
-		it("should return a string", () => {
-			getRandomMatchType().should.be.a("string");
 		});
 	});
 	describe("mocks", () => {

@@ -1,7 +1,7 @@
 import { checkIsMe } from "../utils.js";
 
-const email = (parent, args, context, info) => {
-	checkIsMe(parent, context);
+const email = async (parent, args, context, info) => {
+	await checkIsMe(parent, context);
 	return parent.email;
 };
 

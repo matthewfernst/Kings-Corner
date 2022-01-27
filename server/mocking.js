@@ -14,18 +14,6 @@ export const getRandomFenString = (moves) => {
 
 casual.define("fen", () => getRandomFenString(Math.floor(Math.random() * 30)));
 
-export const getRandomMatchType = () => {
-	const randomInteger = Math.floor(Math.random() * 2)
-	switch (randomInteger) {
-		case 0:
-			return "MatchTwoPlayer";
-		case 1:
-			return "MatchFourPlayer";
-		default:
-			return null;
-	}
-};
-
 const mocks = {
 	User: () => ({
 		__typename: "User",
@@ -38,7 +26,6 @@ const mocks = {
 		password: casual.password
 	}),
 	Match: () => ({
-		__typename: getRandomMatchType(),
 		_id: casual.uuid,
 		name: casual.title
 	}),

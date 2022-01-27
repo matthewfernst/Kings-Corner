@@ -14,10 +14,8 @@ import * as user from "./User";
 import * as playerStatistics from "./User/PlayerStatistics";
 import * as battlePass from "./User/BattlePass";
 
-import { resolveType } from "./Match/*";
-import * as matchTwoPlayer from "./Match/MatchTwoPlayer";
-import * as matchFourPlayer from "./Match/MatchFourPlayer";
-import * as matchResults from "./Match/MatchResults";
+import * as match from "./Match";
+import * as matchResults from "./MatchResults";
 
 import * as message from "./Message";
 
@@ -28,9 +26,7 @@ const resolvers = {
 	User: user,
 	PlayerStatistics: playerStatistics,
 	BattlePass: battlePass,
-	Match: { __resolveType: resolveType },
-	MatchTwoPlayer: matchTwoPlayer,
-	MatchFourPlayer: matchFourPlayer,
+	Match: match,
 	MatchResults: matchResults,
 	Message: message
 };

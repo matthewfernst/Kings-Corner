@@ -19,11 +19,9 @@ export const GetInfoFromSearch = gql`
 				players {
 					avatar
 				}
-				... on MatchTwoPlayer {
-					fen
-					whitePlayer {
-						username
-					}
+				fen
+				whitePlayer {
+					username
 				}
 			}
 			outgoingFriendRequests {
@@ -40,11 +38,9 @@ export const GetInfoFromSearch = gql`
 			players {
 				avatar
 			}
-			... on MatchTwoPlayer {
-				fen
-				whitePlayer {
-					username
-				}
+			fen
+			whitePlayer {
+				username
 			}
 		}
 	}
@@ -165,15 +161,13 @@ export const GetMatchHistory = gql`
 					username
 					avatar
 				}
-				... on MatchTwoPlayer {
-					whitePlayer {
-						username
-					}
-					blackPlayer {
-						username
-					}
-					fen
+				whitePlayer {
+					username
 				}
+				blackPlayer {
+					username
+				}
+				fen
 				matchResults {
 					winner {
 						username
@@ -232,15 +226,13 @@ export const GetMatchesOverview = gql`
 					username
 					avatar
 				}
-				... on MatchTwoPlayer {
-					whitePlayer {
-						username
-					}
-					blackPlayer {
-						username
-					}
-					fen
+				whitePlayer {
+					username
 				}
+				blackPlayer {
+					username
+				}
+				fen
 			}
 		}
 	}
@@ -289,18 +281,16 @@ export const GetMatchData = gql`
 				images
 				thumbnail
 			}
-			... on MatchTwoPlayer {
-				whitePlayer {
-					username
-					avatar
-				}
-				blackPlayer {
-					username
-					avatar
-				}
-				fen
-				fenHistory
+			whitePlayer {
+				username
+				avatar
 			}
+			blackPlayer {
+				username
+				avatar
+			}
+			fen
+			fenHistory
 		}
 	}
 `;

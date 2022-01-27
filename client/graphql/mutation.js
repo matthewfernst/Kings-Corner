@@ -169,10 +169,8 @@ export const MakeMove = gql`
 	mutation MakeMove($matchId: ID!, $updatedFen: Fen!) {
 		makeMove(matchId: $matchId, updatedFen: $updatedFen) {
 			_id
-			... on MatchTwoPlayer {
-				fen
-				fenHistory
-			}
+			fen
+			fenHistory
 		}
 	}
 `;
@@ -187,10 +185,8 @@ export const ResolveMatch = gql`
 				}
 				winnerNewRating
 			}
-			... on MatchTwoPlayer {
-				fen
-				fenHistory
-			}
+			fen
+			fenHistory
 		}
 	}
 `;
