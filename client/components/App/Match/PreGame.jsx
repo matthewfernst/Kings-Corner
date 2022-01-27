@@ -38,19 +38,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const PreGame = (props) => {
-	const getLobbyType = () => {
-		switch (props.matchData.matchLookup.__typename) {
-			case "MatchTwoPlayer":
-				return <LobbyTwoPlayer {...props} />;
-			case "MatchFourPlayer":
-				return <LobbyFourPlayer {...props} />;
-		}
-	};
-
 	return (
 		<Box pr={4} minHeight={"100%"} height={250} className={"verticalScrollDiv"}>
 			<Grid container spacing={4}>
-				{getLobbyType()}
+				<Lobby {...props} />
 				<InviteFriends {...props} />
 				<MatchSettings {...props} />
 				<SkinSelection {...props} />
@@ -189,36 +180,6 @@ const LobbyTwoPlayer = (props) => {
 	);
 };
 
-const LobbyFourPlayer = (props) => {
-	const classes = useStyles();
-
-	const blankPlayerArr = [...Array(4 - props.matchData.matchLookup.players.length)];
-
-	return (
-		<Grid item xs={12}>
-			<Box style={{ width: "100%" }}>
-				<Paper style={{ width: "100%" }}>
-					<Typography
-						variant={"h6"}
-						style={{ paddingTop: 15, paddingBottom: 12, paddingLeft: 24 }}
-					>
-						Lobby
-					</Typography>
-					<Divider />
-					<Box p={3} display={"flex"}>
-						{props.matchData.matchLookup.players.map((player, index) => (
-							<Avatar key={index} src={player.avatar} className={classes.bigAvatar} />
-						))}
-						{blankPlayerArr.map((item, index) => (
-							<Skeleton key={index} variant="rectangular" width={50} height={50} />
-						))}
-					</Box>
-				</Paper>
-			</Box>
-		</Grid>
-	);
-};
-
 const InviteFriends = (props) => {
 	const { loading, error, data, subscribeToMore } = useQuery(GetFriends);
 
@@ -243,16 +204,7 @@ const InviteFriends = (props) => {
 		});
 	});
 
-	const getNumberOfPlayers = () => {
-		switch (props.matchData.matchLookup.__typename) {
-			case "MatchTwoPlayer":
-				return 2;
-			case "MatchFourPlayer":
-				return 4;
-		}
-	};
-
-	if (loading || error || props.matchData.matchLookup.players.length === getNumberOfPlayers()) {
+	if (loading || error || props.matchData.matchLookup.players.length === 2) {
 		return null;
 	}
 
@@ -407,64 +359,6 @@ const MatchSettings = (props) => {
 									>
 										{editingMatchName ? <CheckIcon /> : <EditIcon />}
 									</IconButton>
-								</Box>
-							</Box>
-						</Box>
-						<Box pt={3}>
-							<Typography
-								color="textSecondary"
-								style={{ fontSize: 18, fontWeight: 500 }}
-							>
-								Game Size
-							</Typography>
-							<Divider />
-							<Box pt={2}>
-								<Box display={"flex"} flexWrap={"nowrap"} alignItems={"center"}>
-									<Radio
-										color={"primary"}
-										checked={
-											props.matchData.matchLookup.__typename ===
-											"MatchTwoPlayer"
-										}
-										onChange={() => {
-											if (
-												props.matchData.matchLookup.__typename !==
-												"MatchTwoPlayer"
-											) {
-												props.editMatch({
-													variables: {
-														matchId: props.matchId,
-														gameType: "TWO_PLAYER"
-													}
-												});
-											}
-										}}
-									/>
-									<Typography>Two Player Match</Typography>
-								</Box>
-								<Box display={"flex"} flexWrap={"nowrap"} alignItems={"center"}>
-									<Radio
-										disabled
-										color={"primary"}
-										checked={
-											props.matchData.matchLookup.__typename ===
-											"MatchFourPlayer"
-										}
-										onChange={() => {
-											if (
-												props.matchData.matchLookup.__typename !==
-												"MatchFourPlayer"
-											) {
-												props.editMatch({
-													variables: {
-														matchId: props.matchId,
-														gameType: "FOUR_PLAYER"
-													}
-												});
-											}
-										}}
-									/>
-									<Typography>Four Player Match</Typography>
 								</Box>
 							</Box>
 						</Box>

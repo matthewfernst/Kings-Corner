@@ -29,19 +29,7 @@ type PlayerStatistics {
 	winRate: Float
 }
 
-interface Match {
-	_id: ID!
-	name: String
-	matchOwner: User!
-	pendingPlayers: [User!]!
-	players: [User!]!
-	inProgress: Boolean!
-	boardSkin: Item!
-	pieceSkin: Item!
-	matchResults: MatchResults
-}
-
-type MatchTwoPlayer implements Match {
+type Match {
 	_id: ID!
 	name: String
 	matchOwner: User!
@@ -57,23 +45,11 @@ type MatchTwoPlayer implements Match {
 	fenHistory: [Fen!]!
 }
 
-type MatchFourPlayer implements Match {
-	_id: ID!
-	name: String
-	matchOwner: User!
-	pendingPlayers: [User!]!
-	players: [User!]!
-	inProgress: Boolean!
-	boardSkin: Item!
-	pieceSkin: Item!
-	matchResults: MatchResults
-}
-
 type MatchResults {
 	winner: User
-	losers: [User!]!
+	loser: User
 	winnerNewRating: Int
-	losersNewRating: [Int!]!
+	loserNewRating: Int
 }
 
 type Item {

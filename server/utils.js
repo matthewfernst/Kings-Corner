@@ -19,7 +19,7 @@ export const checkIsMatchOwner = async (context, matchId) => {
 	return matchRecord.players[0] === userRecord.username;
 };
 
-export const checkIsMe = (parent, context) => {
+export const checkIsMe = async (parent, context) => {
 	if (!context.userId || parent._id.toString() !== context.userId.toString()) {
 		throw new AuthenticationError("Permissions Invalid For Requested Field");
 	}

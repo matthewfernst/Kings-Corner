@@ -6,7 +6,6 @@ const createMatch = async (_, args, context, info) => {
 	await checkIsLoggedIn(context);
 	const userRecord = await context.db.collection("Users").findOne(context.userId);
 	const newMatch = {
-		gameType: "TWO_PLAYER",
 		matchOwner: userRecord.username,
 		pendingPlayers: [],
 		players: [userRecord.username],

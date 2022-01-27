@@ -16,7 +16,7 @@ Again built on the Apollo Framework, the backend uses an Apollo Server built on 
 
 ### Node
 
-We are currently using Node version `14.16.1`. This version add support for package level module enforcement. If you are using `nvm`, use the following command to activate the correct Node version.
+We are currently using Node version `17.0.1`. This version add support for package level module enforcement. If you are using `nvm`, use the following command to activate the correct Node version.
 
 ```bash
 nvm use
@@ -74,10 +74,30 @@ The application utilizes a `.env` file reader to obtain many system settings. Th
 AUTH_KEY: The key used to encrypt and decrypt the user's session.
 PASSWORD_KEY: The key used to encrypt and decrypt the user's password.
 REDIS_HOST: The hostname for the redis server.
-MONGO_URI: The URI for the MongoDB database.
 PORT: The port for the server to listen on.
+MONGO_URI: The URI for the MongoDB database.
 MAIL_USERNAME: The username for the mail service.
 MAIL_PASSWORD: The password for the mail service.
 GOOGLE_CLIENT_ID: The client ID for the Google OAuth2 service.
 GOOGLE_CLIENT_SECRET: The client secret for the Google OAuth2 service.
+```
+
+#### Database
+
+We use a MongoDB database for our application. We run this database using a command similar to this one.
+
+```
+docker run -d --name mongo -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=username -e MONGO_INITDB_ROOT_PASSWORD=password -v /Users/user/Hypergate/data:/data/db mongo:focal
+```
+
+This can then be connected to using the following URI environment variable.
+
+```
+MONGO_URI=mongodb://username:password@localhost:27017
+```
+
+Or if you are on the same Docker network, you can use the following URI.
+
+```
+MONGO_URI=mongodb://username:password@mongo:27017
 ```

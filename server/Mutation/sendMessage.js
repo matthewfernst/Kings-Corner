@@ -9,7 +9,7 @@ const sendMessage = async (_, args, context, info) => {
 		throw new UserInputError("Not Friends With Provided User");
 	}
 	const message = {
-		date: new Date(),
+		date: DateTime.now().toMillis(),
 		message: args.message,
 		to: args.friendUsername,
 		from: userRecord.username,
