@@ -1,0 +1,12 @@
+{
+	"presets": [["@babel/preset-react", { "runtime": "automatic" }], "@babel/preset-env"],
+	"plugins": [
+		[
+			"wildcard",
+			{
+				"useCamelCase": true
+			}
+		],
+		"@babel/transform-runtime"
+	]
+}

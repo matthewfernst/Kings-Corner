@@ -1,0 +1,186 @@
+type User {
+	name: String
+	username: String
+	avatar: String
+	email: String!
+	password: String
+	messages: [Message!]!
+	incomingFriendRequests: [User!]!
+	outgoingFriendRequests: [User!]!
+	friends: [User!]!
+	matchInvites: [Match!]!
+	matches: [Match!]!
+	finishedMatches: [Match!]!
+	playerStatistics: PlayerStatistics!
+	missions: [Mission!]!
+	finishedMissions: [Mission!]!
+	money: Int!
+	items: [Item!]!
+	battlePass: BattlePass
+}
+
+type PlayerStatistics {
+	rating: Int
+	ratingHistory: [Int!]
+	wins: Int!
+	losses: Int!
+	stalemates: Int!
+	totalGames: Int!
+	winRate: Float
+}
+
+interface Match {
+	_id: ID!
+	name: String
+	matchOwner: User!
+	pendingPlayers: [User!]!
+	players: [User!]!
+	inProgress: Boolean!
+	boardSkin: Item!
+	pieceSkin: Item!
+	matchResults: MatchResults
+}
+
+type MatchTwoPlayer implements Match {
+	_id: ID!
+	name: String
+	matchOwner: User!
+	pendingPlayers: [User!]!
+	players: [User!]!
+	inProgress: Boolean!
+	boardSkin: Item!
+	pieceSkin: Item!
+	matchResults: MatchResults
+	whitePlayer: User
+	blackPlayer: User
+	fen: Fen!
+	fenHistory: [Fen!]!
+}
+
+type MatchFourPlayer implements Match {
+	_id: ID!
+	name: String
+	matchOwner: User!
+	pendingPlayers: [User!]!
+	players: [User!]!
+	inProgress: Boolean!
+	boardSkin: Item!
+	pieceSkin: Item!
+	matchResults: MatchResults
+}
+
+type MatchResults {
+	winner: User
+	losers: [User!]!
+	winnerNewRating: Int
+	losersNewRating: [Int!]!
+}
+
+type Item {
+	_id: ID!
+	type: ITEM_TYPE!
+	name: String!
+	description: String!
+	thumbnail: String
+	images: String
+	cost: Int
+}
+
+enum ITEM_TYPE {
+	BOARD_SKIN
+	PIECE_SKIN
+	BATTLE_PASS
+}
+
+type Shop {
+	items: [Item!]!
+	battlePass: BattlePass
+}
+
+type BattlePass {
+	_id: ID!
+	items: [Item!]!
+	tiers: [Int!]!
+	cost: Int
+	totalXP: Int!
+	currentTier: Int!
+}
+
+type Mission {
+	_id: ID!
+	name: String!
+	description: String!
+	reward: ID!
+	gainedXP: Int!
+	progress: Int!
+	threshold: Int!
+}
+
+type Message {
+	_id: ID!
+	date: DateTime!
+	message: String!
+	to: User!
+	from: User!
+	readBy: [User!]!
+}
+
+type GoogleLoginReponsePayload {
+	token: AuthorizationToken
+	redirectPath: String
+}
+
+type MessagePayload {
+	_id: ID!
+	date: DateTime!
+	message: String!
+	from: String!
+}
+
+scalar DateTime
+scalar AuthorizationToken
+scalar Fen
+
+type Query {
+	selfLookup: User
+	userLookup(name: String, username: String, email: String): User
+	userSearch(query: String!): [User!]!
+	userTopRating(first: Int!): [User!]!
+	matchLookup(_id: ID!): Match
+	matchSearch(query: String!): [Match!]!
+	shop: Shop!
+}
+
+type Mutation {
+	createUser(email: String!, password: String!, username: String!): AuthorizationToken!
+	loginUser(email: String, username: String, password: String!): AuthorizationToken
+	googleLogin(token: ID!): GoogleLoginReponsePayload
+	editUser(name: String, username: String, avatar: String, email: String, password: String): User!
+	sendResetPasswordEmail(email: String, username: String): Boolean
+	requestFriend(friendUsername: String!): User
+	resolveRequestFriend(friendUsername: String!, choice: Boolean!): User
+	createMatch: Match!
+	editMatch(matchId: ID!, gameType: String, name: String, boardSkin: ID, pieceSkin: ID): Match
+	inviteFriend(matchId: ID!, friendUsername: String!): Match
+	resolveInviteFriend(matchId: ID!, choice: Boolean!): Match
+	deleteUserFromMatch(matchId: ID!, friendUsername: String): Match
+	deleteMatch(matchId: ID!): Boolean
+	startMatch(matchId: ID!): Match
+	makeMove(matchId: ID!, updatedFen: Fen!): Match
+	resolveMatch(matchId: ID!, finalFen: Fen!): Match
+	sendMessage(friendUsername: String!, message: String!): Message
+	readMessage(messageId: ID!): Message
+	buyItem(itemId: ID!): User
+}
+
+type Subscription {
+	newFriendRequest: String!
+	newFriend: String!
+	newMatchInvite: ID!
+	newMatchPlayer(matchId: ID!): String
+	deletedMatchPlayer(matchId: ID!): String
+	deletedMatch(matchId: ID!): ID
+	newMatchInProgress(matchId: ID!): Boolean
+	newMatchMove(matchId: ID!): Fen
+	newMessage: MessagePayload!
+}
