@@ -6,66 +6,49 @@ on:
       - main
 
 jobs:
-  
-  build-electron:
-    
-    name: Build Electron For ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
 
-    strategy:
-      matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
+  compile-artifacts:
+
+    name: Build Artifacts
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v2.3.1
+        uses: actions/checkout@v2
 
-      - name: Restore Cached Modules
+      - name: Cache Node Modules
         uses: actions/cache@v2
         id: cache
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Necessary Windows Preinstall
-        if: matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
-        run: npm install node-pre-gyp -g
-
       - name: Install Node Modules
         if: steps.cache.outputs.cache-hit != 'true'
-        run: npm install
+        run: npm install --legacy-peer-deps
 
-      - name: Set MacOS Signing Certs
-        if: matrix.os == 'macOS-latest'
-        run: chmod +x scripts/add-macos-cert.sh && ./scripts/add-macos-cert.sh
+      - name: Build Server
+        run: npm run buildServer
         env:
-          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
-          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
-
-      - name: Set Windows Signing Certificate
-        uses: timheuer/base64-to-file@v1
-        if: matrix.os == 'windows-latest'
-        id: write_file
-        with:
-          fileName: "win-certificate.pfx"
-          encodedString: ${{ secrets.WINDOWS_CODESIGN_P12 }}
-
-      - name: Package App
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          WINDOWS_CODESIGN_FILE: ${{ steps.write_file.outputs.filePath }}
-          WINDOWS_CODESIGN_PASSWORD: ${{ secrets.WINDOWS_CODESIGN_PASSWORD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: production
-        run: npm run publishElectron
-        continue-on-error: true
 
-  build-container:
-    
-    name: Build Container
+      - name: Build Website
+        run: npm run buildWebsite
+        env:
+          NODE_ENV: production
+
+      - name: Upload dist/ Directory
+        uses: actions/upload-artifact@v2
+        with:
+          name: kc-outputs
+          path: dist/
+
+  build-github-image:
+
+    name: Build GitHub Image
+    needs: compile-artifacts
     runs-on: ubuntu-latest
 
     steps:
@@ -82,44 +65,100 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/cache@v2
-        id: cache
+      - name: Download dist/ Directory
+        uses: actions/download-artifact@v2
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          name: kc-outputs
+          path: ./dist
 
-      - name: Install Node Modules
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm install
-
-      - name: Build Server
-        run: npm run buildServer
-        env:
-          NODE_ENV: production
-
-      - name: Build Website
-        run: npm run buildWebsite
-        env:
-          NODE_ENV: production
-
-      - name: Build and Push to GitHub Packages
+      - name: Build Docker Image And Push To GCR
         run: |
-          docker build . --tag ghcr.io/meta-games-biz/kings-corner:latest
-          docker push ghcr.io/meta-games-biz/kings-corner:latest
+          docker build . --tag ghcr.io/matthewfernst/kings-corner:latest
+          docker push ghcr.io/matthewfernst/kings-corner:latest
 
-  restart-instance:
-    
-    name: Restart Instance
-    needs: build-container
+  build-aws-image:
+
+    name: Build AWS Image
+    needs: compile-artifacts
     runs-on: ubuntu-latest
 
     steps:
-      - name: Execute AWS SSH Commands (Update Repo and Redeploy)
-        uses: appleboy/ssh-action@master
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          script: ~/deploy.sh
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create Kings-Corner .env File
+        uses: DeveloperRic/action-create-env@v1.0.4
+        with:
+          full_text: |
+            AUTH_KEY=${{ secrets.AUTH_KEY }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            DDB_ENDPOINT=${{ secrets.DDB_ENDPOINT }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            PASSWORD_KEY=${{ secrets.PASSWORD_KEY }}
+            TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
+            TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
+
+      - name: Download dist/ Directory
+        uses: actions/download-artifact@v2
+        with:
+          name: kc-outputs
+          path: ./dist
+
+      - name: Build Docker Image And Push To ECR
+        id: build-image
+        run: |
+          docker build . --tag ${{ steps.login-ecr.outputs.registry }}/kings-corner:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/kings-corner:${{ github.sha }}
+
+  create-deployment:
+
+    name: Create ECS Deployment
+    needs: build-aws-image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Render Amazon ECS Task Definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/task-definition.json
+          container-name: kingscorner
+          image: ${{ steps.login-ecr.outputs.registry }}/kings-corner:${{ github.sha }}
+
+      - name: Deploy to Amazon ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: Kings-Corner
+          cluster: Kings-Corner
