@@ -1,5 +1,9 @@
 # Kings-Corner
 
+## Note
+
+This project is now deprecated and in "keep the lights on" mode. We do not support an active domain nor service, but are willing to help get anyone up and running if needed. The final form of this project is found here: https://github.com/jhgrins/Quaesta
+
 ### A Modern Chess Web App
 
 Built on the Apollo Framework for GraphQL, this project implements a full-featured chess application. Using a schema-first Graph  approach, we implement an Apollo Server, with support for services such as authentication, logging, mocking, and testing. Our frontend is React based Apollo Client, utilizing hooks and new technology such as Webpack v5 and Rome for linting.
