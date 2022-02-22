@@ -1,6 +1,6 @@
 # Kings-Corner
 
-## Note
+### Note
 
 This project is now deprecated and in "keep the lights on" mode. We do not support an active domain nor service, but are willing to help get anyone up and running if needed. The final form of this project is found here: https://github.com/jhgrins/Quaesta
 
